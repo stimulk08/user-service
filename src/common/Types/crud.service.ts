@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Repository } from './repository';
 import { DatabaseModel } from './model';
 import { PartialRecord } from './partial-record';
@@ -32,7 +32,7 @@ export abstract class CrudService<
   ): Promise<V> {
     const result = await this.repository.findById(id);
     if (result) return result;
-    throw new NotFoundException(errorText);
+    throw new BadRequestException(errorText);
   }
 
   async throwIfExists(id: K, errorText = `${this.entityName} not found`) {

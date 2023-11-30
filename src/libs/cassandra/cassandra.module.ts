@@ -1,5 +1,5 @@
 import { ConfigModule } from '@nestjs/config';
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { CassandraConnection } from './cassanra-connection';
 
 @Module({
@@ -7,4 +7,13 @@ import { CassandraConnection } from './cassanra-connection';
     providers: [CassandraConnection],
     exports: [CassandraConnection]
 })
-export class CassandraModule {}
+export class CassandraModule {
+    forRoot(): DynamicModule {
+        return { 
+            module: CassandraModule,
+            imports: [ ConfigModule], 
+            providers: [ CassandraConnection ], 
+            exports: [ CassandraConnection ]
+        }; 
+    }
+}

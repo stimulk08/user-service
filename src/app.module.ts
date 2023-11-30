@@ -1,10 +1,14 @@
+import { CassandraModule } from './libs/cassandra/cassandra.module';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { UsersModule } from './apps/users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+      ConfigModule.forRoot(), 
+      CassandraModule,
+      UsersModule
+  ],
+  providers: [],
 })
 export class AppModule {}

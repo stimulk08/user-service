@@ -3,6 +3,7 @@ import { DatabaseModel } from 'src/common/Types/model';
 import { Repository } from 'src/common/Types/repository';
 import { CassandraConnection } from './cassanra-connection';
 import { types } from "cassandra-driver";
+
 @Injectable()
 export abstract class CassandraRepository<T extends DatabaseModel> implements Repository<string, T> {
     constructor(
@@ -22,40 +23,39 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
         await this._connection.execute(`DROP TABLE IF EXISTS ${this._connection.keyspace}.${this.tableName}`);
     }
 
-    async findById(id: string) {
-        return this._connection.execute(`SELECT * FROM ${this._connection.keyspace}.${this.tableName} WHERE id = ${id}`);
+    async findById(id: string): Promise<T | null> {
+        return this._connection
+            .execute(`SELECT * FROM ${this._connection.keyspace}.${this.tableName} WHERE id = ${id}`)
+            .then(res => res.rows[0] as never as T);
     };
 
-    async create(model: T) {
-        console.log(this._connection.keyspace);
+    async create(model: T): Promise<T> {
         const keys = [];
         const values = [];
         for (const key in model) {
+            if (key === 'id') continue;
             keys.push(key);
-            values.push(key === 'id' ? types.Uuid.fromString(model[key] as string) : model[key]);
+            values.push(model[key]);
         }
-        console.log(keys);
-        console.log(values);
-        return this.initTable()
-        .then(() => this._connection.execute(
-            `INSERT INTO ${this._connection.keyspace}.${this.tableName} (${keys.join(',')}) VALUES (${values.map(() => '?').join(',')})`,
-             [values]).then(() => model));
+        return this._connection.execute(
+            `INSERT INTO ${this._connection.keyspace}.${this.tableName} (id,${keys.join(',')}) VALUES (?,${values.map(() => '?').join(',')})`,
+             [types.Uuid.fromString(model.id), ...values]).then((res) => { console.log(res); return model;});
     };
+
 
     async findByIdAndRemove(id: string) {
         return this._connection.execute(`DELETE FROM ${this._connection.keyspace}.${this.tableName} WHERE id = ?`, [id]);
     };
 
     async findByIdAndUpdate(id: string, data: any) {
-        return this._connection.execute(`UPDATE ${this._connection.keyspace}.${this.tableName} SET ? WHERE id = ?`, [data, id]).then(() => data);
+        const updates = Object.keys(data).map(key => `${key} = ?`).join(',');
+        return this._connection.execute(`UPDATE ${this._connection.keyspace}.${this.tableName} SET ${updates} WHERE id = ?`, [...Object.values(data), id]).then(() => data);
     };
 
-    async findAll() {
-        return this.initTable()
-            .then(() => this._connection.execute(`SELECT * FROM ${this._connection.keyspace}.${this.tableName}`)
+    async findAll(): Promise<T[]> {
+        return this._connection.execute(`SELECT * FROM ${this._connection.keyspace}.${this.tableName}`)
             .then((res) => {
-                console.log(res);
-                return [];
-        }));
+                return res.rows.map(row => row as never as T);
+        });
     };
 }

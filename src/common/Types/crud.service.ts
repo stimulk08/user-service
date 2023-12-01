@@ -45,6 +45,7 @@ export abstract class CrudService<
   }
 
   async update(id: K, data: PartialRecord<keyof V, any>) {
-    return this.repository.findByIdAndUpdate(id, data);
+    if (!Object.keys(data).length) throw new BadRequestException('No data to update');
+    return this.findOneOrThrow(id).then(() => this.repository.findByIdAndUpdate(id, data));
   }
 }

@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { DatabaseModel } from "src/common/Types/model";
+import { IdDatabaseModel } from "src/common/Types/model";
 import { UserRole } from "./user-role.entity";
 
-export class User extends DatabaseModel {
+export class User extends IdDatabaseModel {
     @ApiProperty()
     firstName: string;
 

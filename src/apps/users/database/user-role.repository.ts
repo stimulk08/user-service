@@ -10,14 +10,23 @@ export class UserRolesRepository extends CassandraRepository<UserRoleModel> {
             connection,
             'userRoles',
             [
-                { name: 'role', type: 'uuid' }
+                { name: 'userId', type: 'uuid' },
+
             ], {
                 partition: [
-                    { name: 'userId', type: 'uuid' },
+                    { name: 'role', type: 'uuid' },
                 ],
                 claster: [
                     { name: 'creationDate', type: 'timestamp' },
                 ],
             });
+    }
+
+    async findOneByRole(roleId: string): Promise<UserRoleModel> {
+        return this.findOne({ role: {operator: '=', value: roleId} });
+    }
+
+    async findByRole(roleId: string): Promise<UserRoleModel[]> {
+        return this.find({ role: {operator: '=', value: roleId} });
     }
 }

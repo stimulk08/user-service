@@ -2,7 +2,7 @@ import { CassandraRepository } from "src/libs/cassandra/cassandra.repository";
 import { CassandraConnection } from "src/libs/cassandra/cassanra-connection";
 import { Injectable } from "@nestjs/common";
 import { RoleModel } from "../entities/role.entity";
-import { userRoles } from "../entities/user-role.entity";
+import { UserRole, userRoles } from "../entities/user-role.entity";
 import { types } from "cassandra-driver";
 import {v4} from 'uuid'
 @Injectable()
@@ -31,7 +31,11 @@ export class RolesRepository extends CassandraRepository<RoleModel> {
                 }
             ));
     }
-    async findByName(name: string): Promise<RoleModel> {
-        return this.findOne({ name: {operator: '=', value: name} });
+    async findOneByRole(role: UserRole): Promise<RoleModel> {
+        return this.findOne({ name: {operator: '=', value: role} });
+    }
+
+    async findByRole(role: UserRole): Promise<RoleModel[]> {
+        return this.find({ name: {operator: '=', value: role} });
     }
 }

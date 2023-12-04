@@ -27,12 +27,17 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
         await this._connection.execute(query);
     }
 
-    async findOne(params: PartialRecord<keyof T, QueryParam>) {
-        const query = `SELECT * FROM ${this.tableRef} WHERE ${Object.keys(params).map(f => `${f}=?`).join(' AND ')}`;
+    async findOne(params: PartialRecord<keyof T, QueryParam>): Promise<T | null> {
+        return this.find(params, 1).then(results => results[0] ?? null);
+    }
+
+    async find(params: PartialRecord<keyof T, QueryParam>, limit?: number) {
+        let query = `SELECT * FROM ${this.tableRef} WHERE ${Object.keys(params).map(f => `${f}=?`).join(' AND ')}`;
         console.log(query);
         const data = Object.keys(params).map(f => params[f].value);
         console.log(data);
-        return this._connection.execute(query, data).then(this.resultToModel);
+        if (limit) query += ` LIMIT ${limit}`;
+        return this._connection.execute(query, data).then(this.resultToModels);
     }
 
     resultToModel(result: types.ResultSet): T {

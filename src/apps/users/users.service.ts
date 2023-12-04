@@ -8,6 +8,7 @@ import { UserRole } from './entities/user-role.entity';
 import { RolesRepository } from './database/roles.repository';
 import { UserRolesRepository } from './database/user-role.repository';
 import { RegistrationsRepository } from './database/registration.repository';
+import { types } from 'cassandra-driver';
 
 @Injectable()
 export class UsersService extends CrudService<string, User>{
@@ -20,25 +21,36 @@ export class UsersService extends CrudService<string, User>{
     super(User.name, repository);
   }
   async create(dto: CreateUserDto) {
-    const roleModel = await this.roles.findByName(dto.role);
+    const roleModel = await this.roles.findOneByRole(dto.role);
     if (!roleModel) throw new BadRequestException('Role not found');
     console.log(roleModel);
     const userId = v4();
     const creationDate = new Date(Date.now()).toUTCString();
-    const user = await this.repository.create({... dto, creationDate  }, userId);
+    const user = await this.repository.create({... dto, creationDate, id: types.Uuid.random().toString()  }, userId);
     await this.userRoles.create({ userId: userId, role: roleModel.id, creationDate });
     await this.registrations.create({ userId: userId, date: creationDate });
     return user;
   }
 
-  async filter(role?: UserRole, fromDate?: number, toDate?: number) {
-    await this.repository.initTable();
+  async dropDb() {
+        await this.repository.initTable();
     await this.roles.initTable();
     await this.roles.init();
     await this.userRoles.initTable();
     await this.registrations.initTable();
+  }
+
+  async filter(role?: UserRole, fromDate?: number, toDate?: number) {
+    await this.dropDb();
     console.log(role, fromDate, toDate);
-    console.log('ROLES', await this.roles.findAll());
+
+    const roleId = await this.roles.findOneByRole(role);
+    console.log('ROLE', roleId);
+    return this.userRoles.findByRole(roleId.id)
+        .then(usersRole => {
+           const ids = usersRole.map(ur => ur.userId);
+           return this.repository.find({ id: { operator: 'IN', value: ids } });
+        });
 
 
     // if (!(role || fromDate || toDate)) return this.repository.findAll();

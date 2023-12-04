@@ -65,8 +65,6 @@ export class UsersRepository extends CassandraRepository<User> {
             query = `${query} ${needAnd ? 'AND' : ''} creationDate <= ?`;
             params.push(toDate);
         }
-        console.log(query);
-        console.log(Date.now());
         return this.connection.execute(query, params).then(this.resultToModels);
     }
 }

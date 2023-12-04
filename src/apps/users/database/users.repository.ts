@@ -1,7 +1,8 @@
 import { CassandraRepository } from "src/libs/cassandra/cassandra.repository";
-import { User, UserRole } from "../entities/user.entity";
+import { User } from "../entities/user.entity";
 import { CassandraConnection } from "src/libs/cassandra/cassanra-connection";
 import { Injectable } from "@nestjs/common";
+import { UserRole } from "../entities/user-role.entity";
 
 @Injectable()
 export class UsersRepository extends CassandraRepository<User> {
@@ -10,13 +11,39 @@ export class UsersRepository extends CassandraRepository<User> {
             connection,
             'users',
             [
-                'firstName text',
-                'secondName text',
-                'role text',
-                'email text',
-                'password text',
-                'creationdate timestamp'
-            ], 'id uuid');
+                {
+                    name: 'firstName',
+                    type: 'text',
+                },
+                {
+                    name: 'secondName',
+                    type: 'text',
+                },
+                {
+                    name: 'role',
+                    type: 'text',
+                },
+                {
+                    name: 'email',
+                    type: 'text',
+                },
+                {
+                    name: 'password',
+                    type: 'text',
+                },
+                {
+                    name: 'creationDate',
+                    type: 'timestamp',
+                }
+            ], {
+                partition: [
+                    {
+                        name: 'id',
+                        type: 'uuid',
+                    },
+                ],
+                claster: [],
+            });
     }
 
     async filter(role?: UserRole, fromDate?: number, toDate?: number) {
@@ -38,7 +65,6 @@ export class UsersRepository extends CassandraRepository<User> {
             query = `${query} ${needAnd ? 'AND' : ''} creationDate <= ?`;
             params.push(toDate);
         }
-        query += ` ALLOW FILTERING`;
         console.log(query);
         console.log(Date.now());
         return this.connection.execute(query, params).then(this.resultToModels);

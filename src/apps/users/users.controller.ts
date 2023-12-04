@@ -2,8 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole, userRoles } from './entities/user.entity';
 import { ApiQuery } from '@nestjs/swagger';
+import { UserRole, userRoles } from './entities/user-role.entity';
 
 @Controller('users')
 export class UsersController {

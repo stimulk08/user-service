@@ -1,8 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { DatabaseModel } from "src/common/Types/model";
-
-export const userRoles = ['admin', 'owner', 'support', 'manager', 'teamleader'] as const;
-export type UserRole = typeof userRoles[number];
+import { UserRole } from "./user-role.entity";
 
 export class User extends DatabaseModel {
     @ApiProperty()
@@ -19,4 +17,7 @@ export class User extends DatabaseModel {
 
     @ApiProperty()
     password: string;
+
+    @ApiProperty()
+    creationDate: string;
 }

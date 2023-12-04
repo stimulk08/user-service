@@ -12,11 +12,11 @@ export class UsersRepository extends CassandraRepository<User> {
             'users',
             [
                 {
-                    name: 'firstName',
+                    name: 'first_name',
                     type: 'text',
                 },
                 {
-                    name: 'secondName',
+                    name: 'second_name',
                     type: 'text',
                 },
                 {
@@ -32,7 +32,7 @@ export class UsersRepository extends CassandraRepository<User> {
                     type: 'text',
                 },
                 {
-                    name: 'creationDate',
+                    name: 'creation_date',
                     type: 'timestamp',
                 }
             ], {

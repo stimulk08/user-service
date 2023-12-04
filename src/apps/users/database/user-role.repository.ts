@@ -8,16 +8,16 @@ export class UserRolesRepository extends CassandraRepository<UserRoleModel> {
     constructor(protected connection: CassandraConnection) {
         super(
             connection,
-            'userRoles',
+            'user_roles',
             [
-                { name: 'userId', type: 'uuid' },
+                { name: 'user_id', type: 'uuid' },
 
             ], {
                 partition: [
                     { name: 'role', type: 'uuid' },
                 ],
                 claster: [
-                    { name: 'creationDate', type: 'timestamp' },
+                    { name: 'creation_date', type: 'timestamp' },
                 ],
             });
     }

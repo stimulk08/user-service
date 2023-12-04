@@ -12,7 +12,7 @@ export class RegistrationsRepository extends CassandraRepository<RegistrationMod
             [],
             {
                 partition: [
-                    { name: 'userId', type: 'uuid' },
+                    { name: 'user_id', type: 'uuid' },
                     { name: 'date', type: 'timestamp' },
                 ],
                 claster: [],

@@ -5,11 +5,11 @@ import { userRoles, UserRole } from "../entities/user-role.entity";
 export class CreateUserDto {
     @ApiProperty()
     @IsNotEmpty()
-    firstName: string;
+    first_name: string;
 
     @ApiProperty()
     @IsNotEmpty()
-    secondName: string;
+    second_name: string;
 
     @ApiProperty({enum: userRoles})
     @IsNotEmpty()

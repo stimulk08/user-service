@@ -26,9 +26,9 @@ export class UsersService extends CrudService<string, User>{
     console.log(roleModel);
     const userId = v4();
     const creationDate = new Date(Date.now()).toUTCString();
-    const user = await this.repository.create({... dto, creationDate, id: types.Uuid.random().toString()  }, userId);
-    await this.userRoles.create({ userId: userId, role: roleModel.id, creationDate });
-    await this.registrations.create({ userId: userId, date: creationDate });
+    const user = await this.repository.create({...dto, creation_date: creationDate, id: types.Uuid.random().toString() }, userId);
+    await this.userRoles.create({ user_id: userId, role: roleModel.id, creation_date: creationDate });
+    await this.registrations.create({ user_id: userId, date: creationDate });
     return user;
   }
 
@@ -41,19 +41,16 @@ export class UsersService extends CrudService<string, User>{
   }
 
   async filter(role?: UserRole, fromDate?: number, toDate?: number) {
-    await this.dropDb();
-    console.log(role, fromDate, toDate);
-
+    if (!(role || fromDate || toDate)) return this.repository.findAll();
     const roleId = await this.roles.findOneByRole(role);
-    console.log('ROLE', roleId);
     return this.userRoles.findByRole(roleId.id)
         .then(usersRole => {
-           const ids = usersRole.map(ur => ur.userId);
+           if (!usersRole.length) return [];
+           const ids = usersRole.map(ur => ur.user_id.toString());
            return this.repository.find({ id: { operator: 'IN', value: ids } });
         });
 
 
-    // if (!(role || fromDate || toDate)) return this.repository.findAll();
-    // return this.repository.filter(role, fromDate, toDate);
+    
   }
 }

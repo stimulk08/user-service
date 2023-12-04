@@ -34,7 +34,11 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
     async find(params: PartialRecord<keyof T, QueryParam>, limit?: number) {
         let query = `SELECT * FROM ${this.tableRef} WHERE ${Object.keys(params).map(f => `${f}=?`).join(' AND ')}`;
         console.log(query);
-        const data = Object.keys(params).map(f => params[f].value);
+        const data = Object.keys(params).map(f => {
+            let v = params[f].value;
+            if (Array.isArray(v)) v = v.join(',');
+            return v;
+        });
         console.log(data);
         if (limit) query += ` LIMIT ${limit}`;
         return this._connection.execute(query, data).then(this.resultToModels);

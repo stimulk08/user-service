@@ -4,10 +4,10 @@ import { UserRole } from "./user-role.entity";
 
 export class User extends IdDatabaseModel {
     @ApiProperty()
-    firstName: string;
+    first_name: string;
 
     @ApiProperty()
-    secondName: string;
+    second_name: string;
 
     @ApiProperty()
     role: UserRole;
@@ -19,5 +19,5 @@ export class User extends IdDatabaseModel {
     password: string;
 
     @ApiProperty()
-    creationDate: string;
+    creation_date: string;
 }

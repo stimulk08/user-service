@@ -9,8 +9,8 @@ import { RolesRepository } from './database/roles.repository';
 import { UserRolesRepository } from './database/user-role.repository';
 import { RegistrationsRepository } from './database/registration.repository';
 import { types } from 'cassandra-driver';
-import datesBetween from 'dates-between';
 import { ConfigService } from '@nestjs/config';
+import { getDates } from 'src/common/extensions/date';
 
 @Injectable()
 export class UsersService extends CrudService<string, User>{
@@ -44,6 +44,7 @@ export class UsersService extends CrudService<string, User>{
   }
 
   async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
+    await this.dropDb();
     if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
     // let usersIds = [];
     // if (roles.length) {
@@ -56,14 +57,18 @@ export class UsersService extends CrudService<string, User>{
     //         return this.repository.find({ id: { operator: 'IN', value: ids } });
     //       });
     // }
-    return this.filterByDate(fromDate, toDate);
+    // return this.filterByDate(fromDate, toDate);
   }
 
   async filterByDate(fromDate?: number, toDate?: number) {
     if (!(fromDate || toDate)) return this.repository.findAll();
-    const dateRange = datesBetween(fromDate ? new Date(fromDate) : new Date(this.config.get<string>('BASE_DATE')), toDate ? new Date(toDate) : new Date(Date.now()));
-    console.log(dateRange)
-    const users = await this.repository.find({ creation_date: { operator: 'IN', value: dateRange } });
+    fromDate *= 1000;
+    toDate *= 1000;
+    const from = fromDate ? fromDate : this.config.get<string>('BASE_DATE');
+    const to = toDate ? toDate : "Date.now()";
+    console.log(from, to);
+    const dates = getDates(fromDate ? new Date(fromDate) : new Date(this.config.get<string>('BASE_DATE')), toDate ? new Date(toDate) : new Date(Date.now()));
+    const users = await this.registrations.find({ date: { operator: 'IN', value: dates } });
     return users;
    }
 }

@@ -6,9 +6,10 @@ import { CassandraModule } from 'src/libs/cassandra/cassandra.module';
 import { RegistrationsRepository } from './database/registration.repository';
 import { RolesRepository } from './database/roles.repository';
 import { UserRolesRepository } from './database/user-role.repository';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [CassandraModule],
+  imports: [CassandraModule, ConfigModule],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository, RegistrationsRepository, RolesRepository, UserRolesRepository],
   exports: [UsersService],

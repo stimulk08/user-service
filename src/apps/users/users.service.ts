@@ -9,6 +9,8 @@ import { RolesRepository } from './database/roles.repository';
 import { UserRolesRepository } from './database/user-role.repository';
 import { RegistrationsRepository } from './database/registration.repository';
 import { types } from 'cassandra-driver';
+import datesBetween from 'dates-between';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService extends CrudService<string, User>{
@@ -16,7 +18,8 @@ export class UsersService extends CrudService<string, User>{
     protected readonly repository: UsersRepository,
     private roles: RolesRepository,
     private userRoles: UserRolesRepository,
-    private registrations: RegistrationsRepository
+    private registrations: RegistrationsRepository,
+    private config: ConfigService
   ) {
     super(User.name, repository);
   }
@@ -42,13 +45,25 @@ export class UsersService extends CrudService<string, User>{
 
   async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
     if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
-    const roleModels = await this.roles.findByRoles(roles);
-    console.log('ROLE_MODELS', roleModels);
-    return this.userRoles.findByRoles(roleModels.map((role) => role.id))
-        .then(usersRole => {
-           if (!usersRole.length) return [];
-           const ids = usersRole.map(ur => ur.user_id.toString());
-           return this.repository.find({ id: { operator: 'IN', value: ids } });
-        });
+    // let usersIds = [];
+    // if (roles.length) {
+    //   const roleModels = await this.roles.findByRoles(roles);
+    //   console.log('ROLE_MODELS', roleModels);
+    //   usersIds = await this.userRoles.findByRoles(roleModels.map((role) => role.id))
+    //       .then(usersRole => {
+    //         if (!usersRole.length) return [];
+    //         const ids = usersRole.map(ur => ur.user_id.toString());
+    //         return this.repository.find({ id: { operator: 'IN', value: ids } });
+    //       });
+    // }
+    return this.filterByDate(fromDate, toDate);
   }
+
+  async filterByDate(fromDate?: number, toDate?: number) {
+    if (!(fromDate || toDate)) return this.repository.findAll();
+    const dateRange = datesBetween(fromDate ? new Date(fromDate) : new Date(this.config.get<string>('BASE_DATE')), toDate ? new Date(toDate) : new Date(Date.now()));
+    console.log(dateRange)
+    const users = await this.repository.find({ creation_date: { operator: 'IN', value: dateRange } });
+    return users;
+   }
 }

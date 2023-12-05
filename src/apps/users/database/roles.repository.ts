@@ -35,7 +35,7 @@ export class RolesRepository extends CassandraRepository<RoleModel> {
         return this.findOne({ name: {operator: '=', value: role} });
     }
 
-    async findByRole(role: UserRole): Promise<RoleModel[]> {
-        return this.find({ name: {operator: '=', value: role} });
+    async findByRoles(roles: UserRole[]): Promise<RoleModel[]> {
+        return this.find({ name: {operator: 'IN', value: roles } });
     }
 }

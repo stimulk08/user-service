@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, DefaultValuePipe, ParseArrayPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -14,16 +14,17 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @ApiQuery({required: false, name: 'role', enum: userRoles})
+  @ApiQuery({required: false, name: 'roles', enum: userRoles, isArray: true, })
   @ApiQuery({required: false, name: 'fromDate'})
   @ApiQuery({required: false, name: 'toDate'})
   @Get()
   findAll(
-    @Query('role', new DefaultValuePipe(null)) role?: UserRole,
-    @Query('fromDate', new DefaultValuePipe(0)) fromDate?: number,
-    @Query('toDate', new DefaultValuePipe(0)) toDate?: number,
+    @Query('roles', new DefaultValuePipe(""), new ParseArrayPipe({separator: ',', optional: true})) roles: any,
+    @Query('fromDate', new DefaultValuePipe(0)) fromDate: number,
+    @Query('toDate', new DefaultValuePipe(0)) toDate: number,
   ) {
-    return this.usersService.filter(role, fromDate, toDate);
+    console.log(roles, fromDate, toDate);
+    return this.usersService.filter(roles as never as UserRole[], fromDate, toDate);
   }
 
   @Get(':id')

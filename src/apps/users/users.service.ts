@@ -40,17 +40,15 @@ export class UsersService extends CrudService<string, User>{
     await this.registrations.initTable();
   }
 
-  async filter(role?: UserRole, fromDate?: number, toDate?: number) {
-    if (!(role || fromDate || toDate)) return this.repository.findAll();
-    const roleId = await this.roles.findOneByRole(role);
-    return this.userRoles.findByRole(roleId.id)
+  async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
+    if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
+    const roleModels = await this.roles.findByRoles(roles);
+    console.log('ROLE_MODELS', roleModels);
+    return this.userRoles.findByRoles(roleModels.map((role) => role.id))
         .then(usersRole => {
            if (!usersRole.length) return [];
            const ids = usersRole.map(ur => ur.user_id.toString());
            return this.repository.find({ id: { operator: 'IN', value: ids } });
         });
-
-
-    
   }
 }

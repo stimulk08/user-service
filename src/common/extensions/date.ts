@@ -1,10 +1,11 @@
+import dayjs from "dayjs";
+
 export function getDates(startDate: Date, stopDate: Date) {
     console.log('STARTDATE', startDate);
     const dateArray = [];
     const currentDate = startDate;
     while (currentDate <= stopDate) {
-        console.log(currentDate);
-        dateArray.push(new Date (currentDate));
+        dateArray.push(dayjs(currentDate).format('YYYY-MM-DD'));
         currentDate.setDate(currentDate.getDate() + 1);
     }
     return dateArray;

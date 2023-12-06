@@ -24,6 +24,7 @@ export class UsersController {
     @Query('toDate', new DefaultValuePipe(0)) toDate: number,
   ) {
     console.log(roles, fromDate, toDate);
+    roles = roles.filter(role => !!role) as never as UserRole[];
     return this.usersService.filter(roles as never as UserRole[], fromDate, toDate);
   }
 

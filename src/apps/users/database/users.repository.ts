@@ -46,6 +46,10 @@ export class UsersRepository extends CassandraRepository<User> {
             });
     }
 
+    async getByIds(ids: string[]) {
+        return this.find({ id: { operator: 'IN', value: ids } });
+    }
+
     async filter(role?: UserRole, fromDate?: number, toDate?: number) {
         let query = `SELECT * FROM ${this.connection.keyspace}.users WHERE`;
         let needAnd = false;

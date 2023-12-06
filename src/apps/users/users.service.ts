@@ -11,6 +11,8 @@ import { RegistrationsRepository } from './database/registration.repository';
 import { types } from 'cassandra-driver';
 import { ConfigService } from '@nestjs/config';
 import { getDates } from 'src/common/extensions/date';
+import dayjs from 'dayjs';
+import { getIntersection } from 'src/common/extensions/array';
 
 @Injectable()
 export class UsersService extends CrudService<string, User>{
@@ -28,7 +30,8 @@ export class UsersService extends CrudService<string, User>{
     if (!roleModel) throw new BadRequestException('Role not found');
     console.log(roleModel);
     const userId = v4();
-    const creationDate = new Date(Date.now()).toUTCString();
+    const creationDate = dayjs().format('YYYY-MM-DD');
+    console.log();
     const user = await this.repository.create({...dto, creation_date: creationDate, id: types.Uuid.random().toString() }, userId);
     await this.userRoles.create({ user_id: userId, role: roleModel.id, creation_date: creationDate });
     await this.registrations.create({ user_id: userId, date: creationDate });
@@ -44,31 +47,34 @@ export class UsersService extends CrudService<string, User>{
   }
 
   async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
-    await this.dropDb();
     if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
-    // let usersIds = [];
-    // if (roles.length) {
-    //   const roleModels = await this.roles.findByRoles(roles);
-    //   console.log('ROLE_MODELS', roleModels);
-    //   usersIds = await this.userRoles.findByRoles(roleModels.map((role) => role.id))
-    //       .then(usersRole => {
-    //         if (!usersRole.length) return [];
-    //         const ids = usersRole.map(ur => ur.user_id.toString());
-    //         return this.repository.find({ id: { operator: 'IN', value: ids } });
-    //       });
-    // }
-    // return this.filterByDate(fromDate, toDate);
+    let roleResultIds = [];
+    if (roles.length) {
+      const roleModels = await this.roles.findByRoles(roles);
+      roleResultIds = await this.userRoles.findByRoles(roleModels.map((role) => role.id))
+          .then(usersRole => {
+            if (!usersRole.length) return [];
+            return usersRole.map(ur => ur.user_id.toString());
+          });
+    }
+    const dateIds = await this.filterByDate(fromDate, toDate);
+    const resultIds = getIntersection(roleResultIds, dateIds);
+    console.log(roleResultIds, dateIds, resultIds);
+    if (!resultIds.length) return [];
+    return this.repository.getByIds(resultIds);
   }
 
-  async filterByDate(fromDate?: number, toDate?: number) {
-    if (!(fromDate || toDate)) return this.repository.findAll();
-    fromDate *= 1000;
-    toDate *= 1000;
-    const from = fromDate ? fromDate : this.config.get<string>('BASE_DATE');
-    const to = toDate ? toDate : "Date.now()";
-    console.log(from, to);
-    const dates = getDates(fromDate ? new Date(fromDate) : new Date(this.config.get<string>('BASE_DATE')), toDate ? new Date(toDate) : new Date(Date.now()));
+  async filterByDate(fromDate?: number, toDate?: number): Promise<string[]> {
+    if (!(fromDate || toDate)) return [];
+  
+    toDate = toDate ? toDate * 1000 : Date.now();
+    const dates = getDates(
+      fromDate ? new Date(fromDate * 1000) : new Date(this.config.get<string>('BASE_DATE')),
+      new Date(toDate)
+    );
+    console.log(dates);
+    if (!dates.length) return [];
     const users = await this.registrations.find({ date: { operator: 'IN', value: dates } });
-    return users;
+    return users.map(user => user.user_id.toString());
    }
 }

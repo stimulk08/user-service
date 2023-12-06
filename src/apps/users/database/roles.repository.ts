@@ -11,14 +11,14 @@ export class RolesRepository extends CassandraRepository<RoleModel> {
         super(
             connection,
             'roles',
-            [
-                { name: 'id', type: 'uuid' }
-            ],
+            [],
             {
                 partition: [
                     { name: 'name', type: 'text' }    
                 ],
-                claster: [],
+                claster: [
+                    { name: 'id', type: 'uuid' }
+                ],
             });
     }
 

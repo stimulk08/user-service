@@ -6,5 +6,4 @@ export type UserRole = typeof userRoles[number];
 export class UserRoleModel extends DatabaseModel { 
     role: string;
     user_id: string;
-    creation_date: string;
 }

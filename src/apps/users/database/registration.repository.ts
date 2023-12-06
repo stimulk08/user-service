@@ -9,14 +9,14 @@ export class RegistrationsRepository extends CassandraRepository<RegistrationMod
         super(
             connection,
             'registrations',
-            [
-                { name: 'user_id', type: 'uuid' }
-            ],
+            [],
             {
                 partition: [
                     { name: 'date', type: 'timestamp' },
                 ],
-                claster: [],
+                claster: [
+                    { name: 'user_id', type: 'uuid' }
+                ],
             });
     }
 }

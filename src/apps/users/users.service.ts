@@ -28,18 +28,16 @@ export class UsersService extends CrudService<string, User>{
   async create(dto: CreateUserDto) {
     const roleModel = await this.roles.findOneByRole(dto.role);
     if (!roleModel) throw new BadRequestException('Role not found');
-    console.log(roleModel);
     const userId = v4();
     const creationDate = dayjs().format('YYYY-MM-DD');
-    console.log();
     const user = await this.repository.create({...dto, creation_date: creationDate, id: types.Uuid.random().toString() }, userId);
-    await this.userRoles.create({ user_id: userId, role: roleModel.id, creation_date: creationDate });
+    await this.userRoles.create({ user_id: userId, role: roleModel.id });
     await this.registrations.create({ user_id: userId, date: creationDate });
     return user;
   }
 
   async dropDb() {
-        await this.repository.initTable();
+    await this.repository.initTable();
     await this.roles.initTable();
     await this.roles.init();
     await this.userRoles.initTable();
@@ -48,7 +46,8 @@ export class UsersService extends CrudService<string, User>{
 
   async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
     if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
-    let roleResultIds = [];
+    let roleResultIds: string[];
+
     if (roles.length) {
       const roleModels = await this.roles.findByRoles(roles);
       roleResultIds = await this.userRoles.findByRoles(roleModels.map((role) => role.id))
@@ -57,22 +56,29 @@ export class UsersService extends CrudService<string, User>{
             return usersRole.map(ur => ur.user_id.toString());
           });
     }
+    console.log('ROLES_RESULT_IDS', roleResultIds);
     const dateIds = await this.filterByDate(fromDate, toDate);
-    const resultIds = getIntersection(roleResultIds, dateIds);
-    console.log(roleResultIds, dateIds, resultIds);
+    console.log('DATE_RESULT_IDS', dateIds);
+    let resultIds = [];
+    if (!dateIds && !roleResultIds) {
+      console.log('MERGE');
+      resultIds = getIntersection(roleResultIds, dateIds)
+    } else {
+      resultIds = [...(roleResultIds ?? dateIds)]
+    }
+    console.log('RESULT_IDS', resultIds);
     if (!resultIds.length) return [];
     return this.repository.getByIds(resultIds);
   }
 
   async filterByDate(fromDate?: number, toDate?: number): Promise<string[]> {
-    if (!(fromDate || toDate)) return [];
+    if (!(fromDate || toDate)) return null;
   
     toDate = toDate ? toDate * 1000 : Date.now();
     const dates = getDates(
       fromDate ? new Date(fromDate * 1000) : new Date(this.config.get<string>('BASE_DATE')),
       new Date(toDate)
     );
-    console.log(dates);
     if (!dates.length) return [];
     const users = await this.registrations.find({ date: { operator: 'IN', value: dates } });
     return users.map(user => user.user_id.toString());

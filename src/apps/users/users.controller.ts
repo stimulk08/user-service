@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, DefaultValuePipe, ParseArrayPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query, DefaultValuePipe, ParseArrayPipe, HttpCode } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole, userRoles } from './entities/user-role.entity';
+import { FilterQueryDto } from './dto/filter.dto';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -19,12 +21,15 @@ export class UsersController {
   @ApiQuery({required: false, name: 'toDate'})
   @Get()
   findAll(
-    @Query('roles', new DefaultValuePipe(""), new ParseArrayPipe({separator: ',', optional: true})) roles: any,
-    @Query('fromDate', new DefaultValuePipe(0)) fromDate: number,
-    @Query('toDate', new DefaultValuePipe(0)) toDate: number,
+    @Query() dto: FilterQueryDto
   ) {
-    roles = roles.filter(role => !!role) as never as UserRole[];
-    return this.usersService.filter(roles as never as UserRole[], fromDate, toDate);
+    console.log(dto);
+    
+    return this.usersService.filter(
+      (dto.roles as never as UserRole[])?.filter(r => !!r) ?? [], 
+      dto.fromDate,
+      dto.toDate
+    );
   }
 
   @Get(':id')
@@ -32,13 +37,20 @@ export class UsersController {
     return this.usersService.findOneOrThrow(id);
   }
 
+  @HttpCode(204)
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @HttpCode(204)
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Delete()
+  drop() {
+    return this.usersService.dropDb();
   }
 }

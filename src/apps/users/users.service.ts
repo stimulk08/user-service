@@ -44,7 +44,7 @@ export class UsersService extends CrudService<string, User>{
     await this.registrations.initTable();
   }
 
-  async filter(roles?: UserRole[], fromDate?: number, toDate?: number) {
+  async filter(roles?: UserRole[], fromDate?: string, toDate?: string) {
     if (!(roles.length || fromDate || toDate)) return this.repository.findAll();
     let roleResultIds: string[];
 
@@ -71,16 +71,16 @@ export class UsersService extends CrudService<string, User>{
     return this.repository.getByIds(resultIds);
   }
 
-  async filterByDate(fromDate?: number, toDate?: number): Promise<string[]> {
+  async filterByDate(fromDate?: string, toDate?: string): Promise<string[]> {
     if (!(fromDate || toDate)) return null;
   
-    toDate = toDate ? toDate * 1000 : Date.now();
-    const dates = getDates(
-      fromDate ? new Date(fromDate * 1000) : new Date(this.config.get<string>('BASE_DATE')),
-      new Date(toDate)
-    );
-    if (!dates.length) return [];
+    toDate = toDate || dayjs().format('YYYY-MM-DD');
+    fromDate = fromDate || this.config.get<string>('BASE_DATE');
+
+    const dates = getDates(new Date(fromDate), new Date(toDate));
+    if (!dates.length) throw new BadRequestException('Invalid date range');
     const users = await this.registrations.find({ date: { operator: 'IN', value: dates } });
     return users.map(user => user.user_id.toString());
    }
+   //TODO: Remove data from all tables
 }

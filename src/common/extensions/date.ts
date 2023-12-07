@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 
 export function getDates(startDate: Date, stopDate: Date) {
-    if (startDate > stopDate) return [];
+    const today = new Date();
+    if (startDate > today || stopDate > today || startDate > stopDate) return [];
     const dateArray = [];
     const currentDate = startDate;
     while (currentDate <= stopDate) {

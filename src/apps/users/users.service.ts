@@ -3,7 +3,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CrudService } from 'src/common/Types/crud.service';
 import { User } from './entities/user.entity';
 import { UsersRepository } from './database/users.repository';
-import  { v4 } from 'uuid';
 import { UserRole } from './entities/user-role.entity';
 import { RolesRepository } from './database/roles.repository';
 import { UserRolesRepository } from './database/user-role.repository';
@@ -28,11 +27,11 @@ export class UsersService extends CrudService<string, User>{
   async create(dto: CreateUserDto) {
     const roleModel = await this.roles.findOneByRole(dto.role);
     if (!roleModel) throw new BadRequestException('Role not found');
-    const userId = v4();
+    const id = types.Uuid.random().toString();
     const creationDate = dayjs().format('YYYY-MM-DD');
-    const user = await this.repository.create({...dto, creation_date: creationDate, id: types.Uuid.random().toString() }, userId);
-    await this.userRoles.create({ user_id: userId, role: roleModel.id });
-    await this.registrations.create({ user_id: userId, date: creationDate });
+    const user = await this.repository.create({...dto, creation_date: creationDate, id }, id);
+    await this.userRoles.create({ user_id: id, role: roleModel.id });
+    await this.registrations.create({ user_id: id, date: creationDate });
     return user;
   }
 
@@ -75,7 +74,7 @@ export class UsersService extends CrudService<string, User>{
     const user = await this.findById(id);
     if (!user) return;
     await super.remove(id);
-    // await this.userRoles.findAndRemove({ user_id: { operator: '=', value: id}, role: { operator: '=', value: user.role }});
+    await this.userRoles.findAndRemove({ user_id: { operator: '=', value: id}, role: { operator: '=', value: user.role }});
   }
 
   async filterByDate(fromDate?: string, toDate?: string): Promise<string[]> {

@@ -4,6 +4,5 @@ export class TableField {
  }
 
  export const fieldToString = (field: TableField) => {
-    console.log(field);
     return `${field.name} ${field.type}`;
  };

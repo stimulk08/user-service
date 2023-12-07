@@ -1,8 +1,6 @@
 import dayjs from "dayjs";
 
 export function getDates(startDate: Date, stopDate: Date) {
-    console.log('STARTDATE', startDate);
-    console.log('STOPDATE', stopDate);
     if (startDate > stopDate) return [];
     const dateArray = [];
     const currentDate = startDate;

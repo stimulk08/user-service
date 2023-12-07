@@ -71,6 +71,13 @@ export class UsersService extends CrudService<string, User>{
     return this.repository.getByIds(resultIds);
   }
 
+  override async remove(id: string): Promise<any> {
+    const user = await this.findById(id);
+    if (!user) return;
+    await super.remove(id);
+    // await this.userRoles.findAndRemove({ user_id: { operator: '=', value: id}, role: { operator: '=', value: user.role }});
+  }
+
   async filterByDate(fromDate?: string, toDate?: string): Promise<string[]> {
     if (!(fromDate || toDate)) return null;
   
@@ -82,5 +89,4 @@ export class UsersService extends CrudService<string, User>{
     const users = await this.registrations.find({ date: { operator: 'IN', value: dates } });
     return users.map(user => user.user_id.toString());
    }
-   //TODO: Remove data from all tables
 }

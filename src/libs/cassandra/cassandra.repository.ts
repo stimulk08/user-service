@@ -27,20 +27,20 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
         await this._connection.execute(query);
     }
 
+    async findAndRemove(params: PartialRecord<keyof T, QueryParam>) {
+        const query = `DELETE FROM ${this.tableRef} WHERE ${Object.keys(params).map(f => `${f} ${params[f].operator} ?`).join(' AND ')}`;
+        const data = Object.keys(params).map(f => params[f].value);
+        return this._connection.execute(query, data);
+    }
+
     async findOne(params: PartialRecord<keyof T, QueryParam>): Promise<T | null> {
         return this.find(params, 1).then(results => results[0] ?? null);
     }
 
     async find(params: PartialRecord<keyof T, QueryParam>, limit?: number) {
         let query = `SELECT * FROM ${this.tableRef} WHERE ${Object.keys(params).map(f => `${f} ${params[f].operator} ?`).join(' AND ')}`;
-        console.log(query);
-        const data = Object.keys(params).map(f => {
-            // let v = params[f].value;
-            // if (Array.isArray(v)) v = `(${v.map(d => "'" + d + "'").join(',')})`;
-            return params[f].value;
-        });
+        const data = Object.keys(params).map(f => params[f].value);
         if (limit) query += ` LIMIT ${limit}`;
-        console.log('FIND', query, data);
         return this._connection.execute(query, data).then(this.resultToModels);
     }
 
@@ -62,12 +62,6 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
             .then(this.resultToModel);
     };
 
-    // async findBy(fieldName: string, param: QueryParam) {
-    //     return this._connection
-    //       .execute(`SELECT * FROM ${this.tableRef} WHERE ${param.operator} =?`, [param.value])
-    //       .then(this.resultToModel);
-    // }
-
     async create(model: T, id?: string): Promise<T> {
         const keys = [];
         const values = [];
@@ -77,14 +71,11 @@ export abstract class CassandraRepository<T extends DatabaseModel> implements Re
             values.push(model[key]);
         }
         const query = `INSERT INTO ${this.tableRef} (${keys.join(',')}) VALUES (${values.map(() => '?').join(',')})`;
-        console.log(model);
-        console.log('KEYS', keys);
-        console.log("VALUES", values);
-        console.log(query);
 
         return this._connection.execute(
             query,
-            values).then((res) => { console.log(res); return model;});
+            values
+        ).then(() => model);
     };
 
 

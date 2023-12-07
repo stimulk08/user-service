@@ -1,7 +1,8 @@
 import { CassandraModule } from './libs/cassandra/cassandra.module';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UsersModule } from './apps/users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerMiddleware } from './common/middlewares/log.middleware';
 
 @Module({
   imports: [
@@ -11,4 +12,8 @@ import { ConfigModule } from '@nestjs/config';
   ],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

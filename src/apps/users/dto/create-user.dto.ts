@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsIn } from "class-validator";
+import { IsEmail, IsNotEmpty, IsIn, MinLength } from "class-validator";
 import { userRoles, UserRole } from "../entities/user-role.entity";
 
 export class CreateUserDto {
@@ -23,5 +23,6 @@ export class CreateUserDto {
 
     @ApiProperty()
     @IsNotEmpty()
+    @MinLength(5, { message: 'Password must be at least 5 characters long' })
     password: string;
 }

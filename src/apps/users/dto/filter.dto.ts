@@ -8,7 +8,7 @@ export class FilterQueryDto {
     @IsOptional()
     roles: string;
 
-    @ApiPropertyOptional()                                          
+    @ApiPropertyOptional()   
     @IsDateString()
     @IsOptional()
     fromDate: string;
